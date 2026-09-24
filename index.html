@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI测试 (16personalities) - 治愈版</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; }
+        
+        /* 治愈系背景 */
+        body {
+            background: linear-gradient(135deg, #FDFBF7 0%, #F0F4F8 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #4A4A4A;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 背景装饰云朵 */
+        .bg-cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50px;
+            z-index: -1;
+            animation: float 6s ease-in-out infinite;
+        }
+        .bg-cloud1 { width: 150px; height: 50px; top: 10%; left: -50px; animation-delay: 0s; }
+        .bg-cloud2 { width: 200px; height: 60px; bottom: 15%; right: -80px; animation-delay: 2s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        #app { width: 100%; max-width: 700px; padding: 30px; position: relative; z-index: 1; }
+        
+        .screen { display: none; animation: fadeIn 0.5s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ====== 治愈系首页 ====== */
+        .header { text-align: center; margin-bottom: 35px; }
+        
+        /* 吉祥物云朵 */
+        .mascot-container {
+            display: inline-block;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite ease-in-out;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .main-title { font-size: 28px; font-weight: bold; margin-bottom: 10px; color: #6B5B95; letter-spacing: 1px; }
+        .sub-title { font-size: 15px; color: #888; }
+
+        /* 四个卡片布局 */
+        .cards-container { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+            margin-bottom: 35px; 
+        }
+
+        .card { 
+            padding: 25px 15px; 
+            border-radius: 24px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            position: relative; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.04); 
+            border: 3px solid transparent;
+        }
+        
+        /* 卡片不同底色 */
+        .card.simple { background: #FFF0F5; } /* 浅粉 */
+        .card.standard { background: #E8F4F8; } /* 浅蓝 */
+        .card.pro { background: #FFF8E7; } /* 浅黄 */
+        .card.complete { background: #F3E8FF; } /* 浅紫 */
+
+        .card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 15px 30px rgba(0,0,0,0.08); }
+        
+        .card.active { border-color: #FFB6C1; box-shadow: 0 10px 25px rgba(255, 182, 193, 0.4); transform: scale(1.05); }
+        .card.complete.active { border-color: #D8B4FE; box-shadow: 0 10px 25px rgba(216, 180, 254, 0.4); }
+
+        .card-icon { width: 70px; height: 70px; margin: 0 auto 10px; }
+        .card-title { font-size: 20px; font-weight: bold; margin-bottom: 5px; color: #555; }
+        .card-desc { font-size: 13px; color: #777; margin-bottom: 12px; }
+        .card-users { font-size: 11px; color: #AAA; background: rgba(255,255,255,0.6); padding: 4px 8px; border-radius: 10px; display: inline-block; }
+
+        /* 开始按钮 */
+        .start-btn { 
+            width: 100%; 
+            padding: 18px; 
+            border: none; 
+            border-radius: 50px; 
+            background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); 
+            color: white; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 10px 20px rgba(255, 154, 158, 0.4);
+            letter-spacing: 2px;
+        }
+        .start-btn:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(255, 154, 158, 0.6);
+        }
+        .start-btn:active { transform: translateY(1px); }
+
+        /* ====== 以下为答题页与结果页原有样式（未作修改） ====== */
+        .progress-container { width: 100%; height: 8px; background: #e0e0e0; border-radius: 10px; margin-bottom: 15px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #8b74ff, #6a5af9); width: 0%; transition: width 0.3s ease; }
+        .question-meta { text-align: right; font-size: 13px; color: #888; margin-bottom: 20px; }
+        .question-text { font-size: 20px; font-weight: 500; margin-bottom: 30px; line-height: 1.5; }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-btn { padding: 16px 18px; background: #ffffff; border: 2px solid transparent; border-radius: 12px; font-size: 15px; text-align: left; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .option-btn:hover { background: #fcfcfc; border-color: #d0c8ff; }
+        .option-btn.selected { background: #f4f2ff; border-color: #6a5af9; color: #6a5af9; font-weight: bold; }
+
+        .result-box { text-align: center; padding: 40px 20px; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .result-type { font-size: 45px; font-weight: 900; color: #6a5af9; margin-bottom: 10px; letter-spacing: 5px; }
+        .result-title { font-size: 22px; font-weight: bold; margin-bottom: 20px; }
+        .result-desc { font-size: 15px; color: #666; line-height: 1.6; margin-bottom: 30px; text-align: left; }
+        .restart-btn { padding: 12px 30px; border: 2px solid #6a5af9; background: transparent; color: #6a5af9; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
+        .restart-btn:hover { background: #6a5af9; color: #fff; }
+    </style>
+</head>
+<body>
+
+<!-- 治愈系背景装饰 -->
+<div class="bg-cloud bg-cloud1"></div>
+<div class="bg-cloud bg-cloud2"></div>
+
+<div id="app">
+    <!-- 首页 -->
+    <div id="start-screen" class="screen active">
+        <div class="header">
+            <!-- 云朵吉祥物 -->
+            <div class="mascot-container">
+                <svg width="80" height="60" viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 60C8.95431 60 0 51.0457 0 40C0 28.9543 8.95431 20 20 20C22.5 20 24.9 20.45 27.1 21.3C31.5 9.1 43.6 0 58 0C76 0 90 14 90 32C95.5 34.2 100 39.8 100 46C100 54.6 93 61 84 61H20V60Z" fill="#E2E8F0"/>
+                    <circle cx="40" cy="40" r="4" fill="#4A4A4A"/>
+                    <circle cx="60" cy="40" r="4" fill="#4A4A4A"/>
+                    <path d="M45 50 Q50 55 55 50" stroke="#4A4A4A" stroke-width="3" fill="none" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h1 class="main-title">MBTI 治愈测试</h1>
+            <p class="sub-title">探索内心世界，遇见未知的自己</p>
+        </div>
+
+        <div class="cards-container">
+            <!-- 简易版 (小猫) -->
+            <div class="card simple" id="card-simple" onclick="selectVersion('simple', 40)">
+                <div class="card-icon">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="55" r="35" fill="#FFD1DC"/>
+                        <polygon points="20,25 40,45 10,50" fill="#FFD1DC"/>
+                        <polygon points="80,25 60,45 90,50" fill="#FFD1DC"/>
+                        <circle cx="38" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="62" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="30" cy="65" r="7" fill="#FF9AA2" opacity="0.6"/>
+                        <circle cx="70" cy="65" r="7" fill="#FF9AA2" opacity="0.6"/>
+                        <path d="M45 65 Q50 70 55 65" stroke="#4A4A4A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        <line x1="15" y1="60" x2="28" y2="60" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="85" y1="60" x2="72" y2="60" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">40题</div>
+                <div class="card-desc">简易版</div>
+                <div class="card-users">轻松一测</div>
+            </div>
+
+            <!-- 标准版 (小狗) -->
+            <div class="card standard" id="card-standard" onclick="selectVersion('standard', 80)">
+                <div class="card-icon">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="55" r="35" fill="#D4EAF5"/>
+                        <ellipse cx="20" cy="40" rx="15" ry="25" fill="#A8D4E6"/>
+                        <ellipse cx="80" cy="40" rx="15" ry="25" fill="#A8D4E6"/>
+                        <circle cx="38" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="62" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="30" cy="65" r="7" fill="#FF9AA2" opacity="0.5"/>
+                        <circle cx="70" cy="65" r="7" fill="#FF9AA2" opacity="0.5"/>
+                        <ellipse cx="50" cy="65" rx="8" ry="6" fill="#4A4A4A"/>
+                        <path d="M45 75 Q50 80 55 75" stroke="#4A4A4A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">80题</div>
+                <div class="card-desc">标准版</div>
+                <div class="card-users">深入了解</div>
+            </div>
+
+            <!-- 专业版 (小兔) -->
+            <div class="card pro" id="card-pro" onclick="selectVersion('pro', 145)">
+                <div class="card-icon">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="55" r="35" fill="#FFF0D4"/>
+                        <ellipse cx="35" cy="20" rx="10" ry="30" fill="#FFF0D4" transform="rotate(-15 35 20)"/>
+                        <ellipse cx="65" cy="20" rx="10" ry="30" fill="#FFF0D4" transform="rotate(15 65 20)"/>
+                        <ellipse cx="35" cy="20" rx="5" ry="20" fill="#FFD1DC" transform="rotate(-15 35 20)"/>
+                        <ellipse cx="65" cy="20" rx="5" ry="20" fill="#FFD1DC" transform="rotate(15 65 20)"/>
+                        <circle cx="38" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="62" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="30" cy="65" r="7" fill="#FF9AA2" opacity="0.6"/>
+                        <circle cx="70" cy="65" r="7" fill="#FF9AA2" opacity="0.6"/>
+                        <path d="M45 65 Q50 70 55 65" stroke="#4A4A4A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">145题</div>
+                <div class="card-desc">专业版</div>
+                <div class="card-users">精准分析</div>
+            </div>
+
+            <!-- 完整版 (小狐狸) -->
+            <div class="card complete active" id="card-complete" onclick="selectVersion('complete', 200)">
+                <div class="card-icon">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="55" r="35" fill="#FFE4D6"/>
+                        <polygon points="15,20 45,45 5,55" fill="#FFB09C"/>
+                        <polygon points="85,20 55,45 95,55" fill="#FFB09C"/>
+                        <polygon points="20,25 40,45 10,50" fill="#FFD1DC"/>
+                        <polygon points="80,25 60,45 90,50" fill="#FFD1DC"/>
+                        <circle cx="38" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="62" cy="50" r="5" fill="#4A4A4A"/>
+                        <circle cx="30" cy="65" r="7" fill="#FF9AA2" opacity="0.6"/>
+                        <circle cx="70" cy="65" r="7" fill="#FF9AA2" opacity="0.6"/>
+                        <path d="M45 65 Q50 70 55 65" stroke="#4A4A4A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">200题</div>
+                <div class="card-desc">完整版</div>
+                <div class="card-users">深度探索</div>
+            </div>
+        </div>
+
+        <button class="start-btn" onclick="startQuiz()">✨ 开始测试 ✨</button>
+    </div>
+
+    <!-- 答题页 -->
+    <div id="quiz-screen" class="screen">
+        <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="question-meta" id="question-meta">第 1 题 / 共 200 题</div>
+        <h2 class="question-text" id="question-text">加载中...</h2>
+        <div class="options-container" id="options-container"></div>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="result-screen" class="screen">
+        <div class="result-box">
+            <div class="result-type" id="result-type">INTJ</div>
+            <div class="result-title" id="result-title">建筑师</div>
+            <div class="result-desc" id="result-desc"></div>
+            <button class="restart-btn" onclick="restart()">重新测试</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ================= 核心：200道题库 (与原版一致，未做修改) =================
+    const questionBank = [
+        // --- E/I 维度 (1-50) ---
+        { text: "在社交聚会中，你通常会：", options: [{ t: "主动与很多人交谈，包括陌生人", v: "E" }, { t: "只与少数熟悉的朋友交谈", v: "I" }] },
+        { text: "经过漫长的一天后，你更倾向于通过什么方式恢复精力？", options: [{ t: "外出与朋友聚会，享受热闹", v: "E" }, { t: "独处，安静地做自己喜欢的事", v: "I" }] },
+        { text: "在会议或课堂上，你更倾向于：", options: [{ t: "随时举手发言，说出自己的想法", v: "E" }, { t: "先在心里思考成熟后再发言", v: "I" }] },
+        { text: "你更喜欢的工作环境是：", options: [{ t: "开放、活跃、充满交流的团队环境", v: "E" }, { t: "安静、独立、能专注的个人空间", v: "I" }] },
+        { text: "当遇到困难时，你通常会：", options: [{ t: "立刻找别人倾诉或寻求建议", v: "E" }, { t: "自己先思考清楚，再决定是否求助", v: "I" }] },
+        { text: "在陌生的聚会上，你通常：", options: [{ t: "很快就能融入，主动认识新朋友", v: "E" }, { t: "需要一段时间才能放松下来", v: "I" }] },
+        { text: "你认为自己是一个：", options: [{ t: "喜欢表达，倾向于边说边想的人", v: "E" }, { t: "善于倾听，倾向于先想后说的人", v: "I" }] },
+        { text: "周末你更愿意：", options: [{ t: "安排丰富的社交活动，见不同的人", v: "E" }, { t: "宅在家里，享受一个人的时光", v: "I" }] },
+        { text: "在团队合作中，你更倾向于：", options: [{ t: "担任领导者或协调者，积极推动进度", v: "E" }, { t: "做好分配的任务，默默贡献自己的力量", v: "I" }] },
+        { text: "打电话和发信息相比，你更喜欢：", options: [{ t: "直接打电话，沟通更高效", v: "E" }, { t: "发文字信息，有更多思考余地", v: "I" }] },
+        { text: "你更喜欢在什么样的环境下工作？", options: [{ t: "有背景噪音和人们交谈的咖啡馆", v: "E" }, { t: "绝对安静、不受打扰的图书馆", v: "I" }] },
+        { text: "当你在思考一个复杂问题时，你倾向于：", options: [{ t: "找人讨论，在交流中理清思路", v: "E" }, { t: "独自思考，在脑海中推演", v: "I" }] },
+        { text: "你觉得自己更容易被哪种人吸引？", options: [{ t: "热情开朗、充满活力的人", v: "E" }, { t: "沉稳内敛、有深度的人", v: "I" }] },
+        { text: "在派对上，你更常做的是：", options: [{ t: "穿梭在人群中，与不同的人寒暄", v: "E" }, { t: "找到一个舒适角落，与一两人深聊", v: "I" }] },
+        { text: "你更喜欢的假期方式是：", options: [{ t: "去热闹的城市，体验丰富的夜生活", v: "E" }, { t: "去宁静的乡村，享受自然的静谧", v: "I" }] },
+        { text: "别人常评价你为：", options: [{ t: "开朗、健谈、容易亲近", v: "E" }, { t: "安静、神秘、需要慢慢了解", v: "I" }] },
+        { text: "你更倾向于：", options: [{ t: "认识很多泛泛之交", v: "E" }, { t: "维护几个知心好友", v: "I" }] },
+        { text: "在表达观点时，你通常：", options: [{ t: "想到什么就说什么，直接表达", v: "E" }, { t: "斟酌措辞，确保表达准确无误", v: "I" }] },
+        { text: "你更喜欢哪种沟通方式？", options: [{ t: "面对面的交流，能看到表情和肢体语言", v: "E" }, { t: "书面文字交流，有充分的时间组织语言", v: "I" }] },
+        { text: "当你需要放松时，你会选择：", options: [{ t: "约朋友出去吃饭、看电影", v: "E" }, { t: "听音乐、看书或独自散步", v: "I" }] },
+        { text: "你更享受哪种课堂氛围？", options: [{ t: "互动频繁、小组讨论热烈的课堂", v: "E" }, { t: "老师讲授为主、安静听讲的课堂", v: "I" }] },
+        { text: "在遇到新朋友时，你通常：", options: [{ t: "主动介绍自己，寻找共同话题", v: "E" }, { t: "等待对方先开口，再慢慢回应", v: "I" }] },
+        { text: "你更倾向于在什么状态下做出重要决定？", options: [{ t: "和别人讨论后，听取多方意见", v: "E" }, { t: "自己静下心来，独立做出判断", v: "I" }] },
+        { text: "你觉得哪种情况更让你感到疲惫？", options: [{ t: "长时间独处，没有人交流", v: "E" }, { t: "长时间社交，没有独处时间", v: "I" }] },
+        { text: "你更喜欢的娱乐活动是：", options: [{ t: "参加派对、KTV、团队游戏", v: "E" }, { t: "看电影、画画、写作或做手工", v: "I" }] },
+        { text: "在团队中，你通常扮演的角色是：", options: [{ t: "气氛活跃者，带动大家情绪", v: "E" }, { t: "观察者，在关键时刻提出见解", v: "I" }] },
+        { text: "你更倾向于如何度过你的生日？", options: [{ t: "举办大型聚会，邀请很多朋友", v: "E" }, { t: "和几个最亲密的人安静地庆祝", v: "I" }] },
+        { text: "你通常：", options: [{ t: "很快就能和陌生人打成一片", v: "E" }, { t: "需要较长时间才能对陌生人敞开心扉", v: "I" }] },
+        { text: "在阅读一本书时，你更喜欢：", options: [{ t: "和他人分享读书心得，讨论情节", v: "E" }, { t: "独自沉浸在书中的世界，细细品味", v: "I" }] },
+        { text: "你更喜欢哪种旅行伴侣？", options: [{ t: "一群朋友，热热闹闹", v: "E" }, { t: "一个人或一两个知己，自由自在", v: "I" }] },
+        { text: "当你感到压力时，你会：", options: [{ t: "找人倾诉，寻求外部支持", v: "E" }, { t: "自己消化，通过独处来恢复能量", v: "I" }] },
+        { text: "你更倾向于认为自己是：", options: [{ t: "外部世界导向，喜欢行动", v: "E" }, { t: "内部世界导向，喜欢反思", v: "I" }] },
+        { text: "在社交场合，你更关注：", options: [{ t: "周围正在发生什么，大家都在聊什么", v: "E" }, { t: "自己的内心感受和想法", v: "I" }] },
+        { text: "你更喜欢的约会方式是：", options: [{ t: "去热闹的游乐场或音乐节", v: "E" }, { t: "去安静的博物馆或公园散步", v: "I" }] },
+        { text: "在面临选择时，你更倾向于：", options: [{ t: "听取他人的经验和建议", v: "E" }, { t: "相信自己的直觉和内心判断", v: "I" }] },
+        { text: "你更喜欢的室友类型是：", options: [{ t: "经常带朋友回家，热闹非凡", v: "E" }, { t: "安静礼貌，互不打扰", v: "I" }] },
+        { text: "你通常在什么情况下最有灵感？", options: [{ t: "在与人激烈讨论时", v: "E" }, { t: "在独自沉思或散步时", v: "I" }] },
+        { text: "你更倾向于如何面对新环境？", options: [{ t: "立刻开始探索，主动结交新朋友", v: "E" }, { t: "先观察适应，慢慢建立安全感", v: "I" }] },
+        { text: "在聚会上，你通常是：", options: [{ t: "最晚离开的那批人之一", v: "E" }, { t: "较早离开，避免过度消耗", v: "I" }] },
+        { text: "你更喜欢的运动方式是：", options: [{ t: "团队运动，如篮球、足球", v: "E" }, { t: "个人运动，如跑步、瑜伽", v: "I" }] },
+        { text: "在课堂上，你更倾向于：", options: [{ t: "坐在前排，积极参与互动", v: "E" }, { t: "坐在后排，安静做笔记", v: "I" }] },
+        { text: "你更倾向于：", options: [{ t: "边做边想，在实践中学习", v: "E" }, { t: "想好再做，谋定而后动", v: "I" }] },
+        { text: "你更容易记住：", options: [{ t: "与人交往的愉快经历", v: "E" }, { t: "独自思考时的深刻感悟", v: "I" }] },
+        { text: "在需要做决定时，你更愿意：", options: [{ t: "召开会议，大家投票决定", v: "E" }, { t: "自己收集信息，独立拍板", v: "I" }] },
+        { text: "你更喜欢的休闲方式是：", options: [{ t: "参加社团活动或志愿者服务", v: "E" }, { t: "在家追剧、打游戏或做手工", v: "I" }] },
+        { text: "你更倾向于如何表达情感？", options: [{ t: "直接说出来，让对方知道", v: "E" }, { t: "通过行动或文字含蓄表达", v: "I" }] },
+        { text: "在遇到挫折时，你更倾向于：", options: [{ t: "找朋友倾诉，寻求安慰", v: "E" }, { t: "自己默默消化，写日记或思考", v: "I" }] },
+        { text: "你更喜欢的聚会规模是：", options: [{ t: "大型聚会，人越多越热闹", v: "E" }, { t: "小型聚会，三五好友足矣", v: "I" }] },
+        { text: "你通常是如何获得能量的？", options: [{ t: "从与他人的互动中获得", v: "E" }, { t: "从独处和自我反思中获得", v: "I" }] },
+        { text: "在社交软件上，你更倾向于：", options: [{ t: "频繁发动态，喜欢与人互动", v: "E" }, { t: "很少发动态，主要用来浏览信息", v: "I" }] },
+
+        // --- S/N 维度 (51-100) ---
+        { text: "你更倾向于关注：", options: [{ t: "现实和具体的事物，注重细节", v: "S" }, { t: "未来的可能性和抽象的概念", v: "N" }] },
+        { text: "在学习新事物时，你更喜欢：", options: [{ t: "按照明确的步骤和说明一步步来", v: "S" }, { t: "先了解整体概念，再自己摸索细节", v: "N" }] },
+        { text: "你更容易被哪种描述吸引？", options: [{ t: "实用、真实、脚踏实地的", v: "S" }, { t: "创新、独特、充满想象力的", v: "N" }] },
+        { text: "当你读一本书时，你更关注：", options: [{ t: "具体的情节、事实和细节描写", v: "S" }, { t: "背后的隐喻、主题和深层含义", v: "N" }] },
+        { text: "你更相信：", options: [{ t: "眼见为实，经验是最好的老师", v: "S" }, { t: "直觉和灵感，第六感往往很准", v: "N" }] },
+        { text: "在解决问题时，你倾向于：", options: [{ t: "使用经过验证的、传统的方法", v: "S" }, { t: "尝试全新的、从未有人试过的方法", v: "N" }] },
+        { text: "你更喜欢的旅游方式是：", options: [{ t: "提前做好详细攻略，按计划游玩", v: "S" }, { t: "随心所欲，走到哪算哪，探索未知", v: "N" }] },
+        { text: "对于未来，你通常：", options: [{ t: "关注当下，做好眼前的事", v: "S" }, { t: "喜欢畅想未来，设定长远目标", v: "N" }] },
+        { text: "你更容易注意到：", options: [{ t: "周围环境的细微变化（如换了个发型）", v: "S" }, { t: "事物之间的内在联系和规律", v: "N" }] },
+        { text: "你更喜欢的老师是：", options: [{ t: "讲课条理清晰，提供大量事实案例的", v: "S" }, { t: "讲课充满启发性，鼓励发散思维的", v: "N" }] },
+        { text: "你更倾向于相信：", options: [{ t: "已经被证实的科学结论", v: "S" }, { t: "尚未被证实的理论假设", v: "N" }] },
+        { text: "当你看电影时，你更注重：", options: [{ t: "画面、音效和演员的表演细节", v: "S" }, { t: "剧情的深层含义和导演的意图", v: "N" }] },
+        { text: "你更喜欢的谈话内容是：", options: [{ t: "日常生活中的具体事情", v: "S" }, { t: "哲学、理想和抽象的概念", v: "N" }] },
+        { text: "在描述一件事情时，你倾向于：", options: [{ t: "按时间顺序，详细描述细节", v: "S" }, { t: "概括大意，重点描述感受和联想", v: "N" }] },
+        { text: "你更喜欢的礼物是：", options: [{ t: "实用、马上就能用到的物品", v: "S" }, { t: "有创意、有特殊含义的物品", v: "N" }] },
+        { text: "你更倾向于：", options: [{ t: "活在当下，享受此刻", v: "S" }, { t: "展望未来，规划明天", v: "N" }] },
+        { text: "你更擅长的技能是：", options: [{ t: "记忆事实和细节", v: "S" }, { t: "理解概念和理论", v: "N" }] },
+        { text: "在处理任务时，你更注重：", options: [{ t: "完成任务的效率和准确性", v: "S" }, { t: "任务背后的意义和创新性", v: "N" }] },
+        { text: "你更喜欢的书籍类型是：", options: [{ t: "纪实文学、传记、实用指南", v: "S" }, { t: "科幻小说、哲学著作、诗歌", v: "N" }] },
+        { text: "你更倾向于认为：", options: [{ t: "规则和传统有其存在的价值", v: "S" }, { t: "规则应该被打破，推陈出新", v: "N" }] },
+        { text: "在团队中，你更擅长：", options: [{ t: "执行具体任务，注重细节", v: "S" }, { t: "提出新想法，把握大方向", v: "N" }] },
+        { text: "你更喜欢的休闲活动是：", options: [{ t: "烹饪、园艺、手工等动手活动", v: "S" }, { t: "阅读、写作、思考等脑力活动", v: "N" }] },
+        { text: "你更容易被什么说服？", options: [{ t: "具体的数据和事实", v: "S" }, { t: "有说服力的理论和愿景", v: "N" }] },
+        { text: "在陌生的环境中，你首先注意到：", options: [{ t: "周围的具体设施和路线", v: "S" }, { t: "整体的氛围和感觉", v: "N" }] },
+        { text: "你更倾向于：", options: [{ t: "脚踏实地，一步一个脚印", v: "S" }, { t: "天马行空，跳跃式思维", v: "N" }] },
+        { text: "你更喜欢的音乐类型是：", options: [{ t: "旋律优美、歌词具体的流行音乐", v: "S" }, { t: "意境深远、抽象的实验音乐", v: "N" }] },
+        { text: "在解决问题时，你更依赖：", options: [{ t: "过去的经验和常规方法", v: "S" }, { t: "灵感和直觉，不走寻常路", v: "N" }] },
+        { text: "你更喜欢的对话伙伴是：", options: [{ t: "说话具体、接地气的人", v: "S" }, { t: "思维跳跃、富有想象力的人", v: "N" }] },
+        { text: "你更倾向于：", options: [{ t: "相信常识和普遍规律", v: "S" }, { t: "怀疑常识，寻找新的解释", v: "N" }] },
+        { text: "在写文章时，你更注重：", options: [{ t: "事实准确，逻辑清晰", v: "S" }, { t: "观点新颖，富有文采", v: "N" }] },
+        { text: "你更喜欢的游戏类型是：", options: [{ t: "模拟经营、策略类游戏", v: "S" }, { t: "角色扮演、开放世界探索游戏", v: "N" }] },
+        { text: "你更倾向于关注：", options: [{ t: "事物的现状和实际用途", v: "S" }, { t: "事物的潜在可能性和发展空间", v: "N" }] },
+        { text: "在学习历史时，你更感兴趣的是：", options: [{ t: "具体的历史事件和人物", v: "S" }, { t: "历史发展的规律和启示", v: "N" }] },
+        { text: "你更喜欢的职业方向是：", options: [{ t: "会计、工程师、医生等具体职业", v: "S" }, { t: "作家、设计师、策划等创意职业", v: "N" }] },
+        { text: "当你遇到新事物时，你通常会：", options: [{ t: "先了解它的具体功能和操作方法", v: "S" }, { t: "先想象它可能带来的改变和影响", v: "N" }] },
+        { text: "你更倾向于：", options: [{ t: "尊重传统，遵循前人的经验", v: "S" }, { t: "打破常规，探索未知的领域", v: "N" }] },
+        { text: "在观看艺术展时，你更关注：", options: [{ t: "作品的色彩、构图和技法", v: "S" }, { t: "作品传达的情感和思想", v: "N" }] },
+        { text: "你更喜欢的电影结局是：", options: [{ t: "大团圆，交代清楚的结局", v: "S" }, { t: "开放式，留有想象空间的结局", v: "N" }] },
+        { text: "你更倾向于：", options: [{ t: "把复杂的事情简单化", v: "S" }, { t: "把简单的事情复杂化（深入思考）", v: "N" }] },
+        { text: "你更喜欢的交谈方式是：", options: [{ t: "就事论事，直接讨论问题", v: "S" }, { t: "发散思维，从一个话题引申到另一个", v: "N" }] },
+        { text: "你更倾向于相信：", options: [{ t: "实践出真知", v: "S" }, { t: "理论指导实践", v: "N" }] },
+        { text: "你更喜欢的假期安排是：", options: [{ t: "去一个熟悉的地方放松", v: "S" }, { t: "去一个从未去过的地方探险", v: "N" }] },
+        { text: "在面对问题时，你更倾向于：", options: [{ t: "分析问题的具体成因", v: "S" }, { t: "思考问题背后的普遍规律", v: "N" }] },
+        { text: "你更喜欢的书籍结构是：", options: [{ t: "章节分明，逻辑严密", v: "S" }, { t: "意识流，充满隐喻和象征", v: "N" }] },
+        { text: "你更倾向于：", options: [{ t: "关注此时此刻的感受", v: "S" }, { t: "思考过去和未来的联系", v: "N" }] },
+        { text: "在团队中，你更擅长：", options: [{ t: "维护日常运营，保证工作质量", v: "S" }, { t: "提出战略规划，引领团队方向", v: "N" }] },
+        { text: "你更喜欢的购物方式是：", options: [{ t: "有明确的购物清单，直奔目标", v: "S" }, { t: "漫无目的地逛，发现新奇物品", v: "N" }] },
+        { text: "你更倾向于认为：", options: [{ t: "眼见为实，耳听为虚", v: "S" }, { t: "看不见的东西往往更重要", v: "N" }] },
+        { text: "你更喜欢的交流内容是：", options: [{ t: "分享生活中的趣事和经历", v: "S" }, { t: "探讨人生的意义和哲学问题", v: "N" }] },
+
+        // --- T/F 维度 (101-150) ---
+        { text: "做决定时，你更看重：", options: [{ t: "逻辑分析和客观事实", v: "T" }, { t: "个人价值观和对他人的影响", v: "F" }] },
+        { text: "当朋友向你倾诉烦恼时，你通常会：", options: [{ t: "帮他们分析问题，提出解决方案", v: "T" }, { t: "先表达理解和同情，给予情感支持", v: "F" }] },
+        { text: "在争论中，你更倾向于：", options: [{ t: "就事论事，坚持自己的逻辑", v: "T" }, { t: "照顾对方情绪，尽量避免冲突", v: "F" }] },
+        { text: "你更愿意别人评价你为：", options: [{ t: "公正、理性、有能力的", v: "T" }, { t: "温暖、善良、有同理心的", v: "F" }] },
+        { text: "面对批评时，你通常：", options: [{ t: "客观分析批评是否有道理", v: "T" }, { t: "容易感到受伤，在意别人的看法", v: "F" }] },
+        { text: "你认为更重要的是：", options: [{ t: "公平和真理", v: "T" }, { t: "和谐与仁慈", v: "F" }] },
+        { text: "在团队中，你更看重：", options: [{ t: "效率和目标的达成", v: "T" }, { t: "团队成员之间的融洽关系", v: "F" }] },
+        { text: "当你必须给别人负面反馈时，你会：", options: [{ t: "直截了当地指出问题，以期改进", v: "T" }, { t: "委婉表达，尽量不伤害对方感情", v: "F" }] },
+        { text: "你更容易被哪种电影打动？", options: [{ t: "逻辑严密、情节烧脑的悬疑片", v: "T" }, { t: "情感细腻、感人至深的文艺片", v: "F" }] },
+        { text: "在制定规则时，你更倾向于：", options: [{ t: "规则面前人人平等，不应有例外", v: "T" }, { t: "规则应该根据具体情况灵活变通", v: "F" }] },
+        { text: "你更倾向于认为：", options: [{ t: "理智应该战胜情感", v: "T" }, { t: "情感是人类最宝贵的财富", v: "F" }] },
+        { text: "在解决冲突时，你更注重：", options: [{ t: "找出问题的根源，彻底解决", v: "T" }, { t: "安抚各方情绪，维持表面和谐", v: "F" }] },
+        { text: "你更喜欢的领导类型是：", options: [{ t: "雷厉风行，注重结果的", v: "T" }, { t: "善解人意，关心下属的", v: "F" }] },
+        { text: "在做道德判断时，你更倾向于：", options: [{ t: "依据普遍的原则和逻辑", v: "T" }, { t: "依据具体情境和人情世故", v: "F" }] },
+        { text: "你更倾向于：", options: [{ t: "就事论事，不掺杂个人情感", v: "T" }, { t: "设身处地，考虑他人的感受", v: "F" }] },
+        { text: "当别人向你寻求建议时，你通常会：", options: [{ t: "给出客观理性的分析", v: "T" }, { t: "先共情，再给出温和的建议", v: "F" }] },
+        { text: "你更喜欢的沟通方式是：", options: [{ t: "直接、坦率、明确", v: "T" }, { t: "委婉、含蓄、照顾面子", v: "F" }] },
+        { text: "你更倾向于认为：", options: [{ t: "真理越辩越明", v: "T" }, { t: "争论容易伤感情", v: "F" }] },
+        { text: "在面对弱势群体时，你更倾向于：", options: [{ t: "分析造成弱势的结构性原因", v: "T" }, { t: "产生强烈的同情心并想要帮助", v: "F" }] },
+        { text: "你更喜欢的职业是：", options: [{ t: "科学家、律师、工程师", v: "T" }, { t: "心理咨询师、教师、社工", v: "F" }] },
+        { text: "在做决定时，你更容易受到什么影响？", options: [{ t: "数据和事实", v: "T" }, { t: "他人的感受和期望", v: "F" }] },
+        { text: "你更倾向于：", options: [{ t: "保持客观冷静，不被情绪左右", v: "T" }, { t: "跟随内心感受，做真实的自己", v: "F" }] },
+        { text: "当团队出现分歧时，你更倾向于：", options: [{ t: "通过辩论和逻辑来决出胜负", v: "T" }, { t: "寻求妥协和共识，维护团结", v: "F" }] },
+        { text: "你更看重一个人的：", options: [{ t: "能力和智慧", v: "T" }, { t: "品德和善良", v: "F" }] },
+        { text: "在评价一项工作成果时，你更注重：", options: [{ t: "是否达到了预期目标", v: "T" }, { t: "团队成员是否在过程中感到愉快", v: "F" }] },
+        { text: "你更倾向于：", options: [{ t: "用逻辑说服别人", v: "T" }, { t: "用情感打动别人", v: "F" }] },
+        { text: "在面对压力时，你更倾向于：", options: [{ t: "理性分析，寻找解决办法", v: "T" }, { t: "情绪化反应，需要情感支持", v: "F" }] },
+        { text: "你更喜欢的文学作品是：", options: [{ t: "推理小说、科普读物", v: "T" }, { t: "言情小说、人物传记", v: "F" }] },
+        { text: "你更倾向于认为：", options: [{ t: "对错比感受更重要", v: "T" }, { t: "感受比对错更重要", v: "F" }] },
+        { text: "在处理人际关系时，你更注重：", options: [{ t: "界限分明，互不干涉", v: "T" }, { t: "互相关心，彼此依赖", v: "F" }] },
+        { text: "你更喜欢的团队氛围是：", options: [{ t: "竞争激烈，能者上庸者下", v: "T" }, { t: "互帮互助，共同进步", v: "F" }] },
+        { text: "你更倾向于：", options: [{ t: "保持独立思考，不随波逐流", v: "T" }, { t: "顾及群体感受，避免被孤立", v: "F" }] },
+        { text: "当你看到不公正的事情时，你首先：", options: [{ t: "分析不公正的原因和机制", v: "T" }, { t: "对受害者产生强烈的同情", v: "F" }] },
+        { text: "你更倾向于相信：", options: [{ t: "人性本恶，需要法律约束", v: "T" }, { t: "人性本善，需要关爱引导", v: "F" }] },
+        { text: "在做计划时，你更注重：", options: [{ t: "目标的合理性和可行性", v: "T" }, { t: "计划对相关人员的影响", v: "F" }] },
+        { text: "你更喜欢的电影类型是：", options: [{ t: "科幻、动作、悬疑", v: "T" }, { t: "爱情、家庭、剧情", v: "F" }] },
+        { text: "在争吵后，你更倾向于：", options: [{ t: "冷静下来，理清对错", v: "T" }, { t: "主动示好，修复关系", v: "F" }] },
+        { text: "你更倾向于：", options: [{ t: "以理服人", v: "T" }, { t: "以情动人", v: "F" }] },
+        { text: "在面对他人的错误时，你更倾向于：", options: [{ t: "指出错误，要求改正", v: "T" }, { t: "包容理解，给予机会", v: "F" }] },
+        { text: "你更喜欢的演讲风格是：", options: [{ t: "逻辑严密，数据详实", v: "T" }, { t: "声情并茂，富有感染力", v: "F" }] },
+        { text: "你更倾向于认为：", options: [{ t: "真理往往掌握在少数人手中", v: "T" }, { t: "群众的眼光是雪亮的", v: "F" }] },
+        { text: "在处理客户投诉时，你更倾向于：", options: [{ t: "按规章制度办事", v: "T" }, { t: "特事特办，安抚客户情绪", v: "F" }] },
+        { text: "你更喜欢的伴侣类型是：", options: [{ t: "聪明理性，能进行深度对话", v: "T" }, { t: "温柔体贴，能提供情绪价值", v: "F" }] },
+        { text: "你更倾向于：", options: [{ t: "独立思考，不受他人影响", v: "T" }, { t: "重视他人的意见和感受", v: "F" }] },
+        { text: "在评价历史人物时，你更注重：", options: [{ t: "其历史功绩和客观影响", v: "T" }, { t: "其个人品格和道德操守", v: "F" }] },
+        { text: "你更倾向于：", options: [{ t: "理智地分析问题", v: "T" }, { t: "感性地体验生活", v: "F" }] },
+        { text: "在面对选择时，你更倾向于：", options: [{ t: "选择最有利的方案", v: "T" }, { t: "选择最不伤害他人的方案", v: "F" }] },
+        { text: "你更喜欢的书籍是：", options: [{ t: "逻辑推理类", v: "T" }, { t: "情感治愈类", v: "F" }] },
+        { text: "你更倾向于认为：", options: [{ t: "能力比态度重要", v: "T" }, { t: "态度比能力重要", v: "F" }] },
+        { text: "在团队合作中，你更看重：", options: [{ t: "分工明确，各司其职", v: "T" }, { t: "互相支持，氛围融洽", v: "F" }] },
+
+        // --- J/P 维度 (151-200) ---
+        { text: "你更喜欢的生活方式是：", options: [{ t: "按计划行事，井然有序", v: "J" }, { t: "随性而为，保持灵活", v: "P" }] },
+        { text: "面对截止日期，你通常会：", options: [{ t: "提前规划，早早完成任务", v: "J" }, { t: "在最后期限前集中精力冲刺", v: "P" }] },
+        { text: "你的工作桌面通常是：", options: [{ t: "干净整洁，物品分类摆放", v: "J" }, { t: "看似凌乱，但自己总能找到东西", v: "P" }] },
+        { text: "当计划突然被打乱时，你会：", options: [{ t: "感到烦躁，希望尽快恢复原计划", v: "J" }, { t: "觉得无所谓，正好可以尝试新事物", v: "P" }] },
+        { text: "在旅行前，你通常会：", options: [{ t: "详细规划好每天的行程和住宿", v: "J" }, { t: "只定好机票和第一晚住宿，其余随缘", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "尽早做出决定，获得确定感", v: "J" }, { t: "保留选择余地，看看有没有更好的", v: "P" }] },
+        { text: "对于待办事项，你更喜欢：", options: [{ t: "列一个清单，完成一项划掉一项", v: "J" }, { t: "记在脑子里，想起来什么就做什么", v: "P" }] },
+        { text: "你认为自己是一个：", options: [{ t: "自律、有条理、喜欢掌控感的人", v: "J" }, { t: "随性、适应力强、喜欢新鲜感的人", v: "P" }] },
+        { text: "在购物时，你通常会：", options: [{ t: "列好购物清单，按需购买", v: "J" }, { t: "漫无目的地逛，看到喜欢的就买", v: "P" }] },
+        { text: "面对复杂多变的环境，你更倾向于：", options: [{ t: "尽快建立秩序和规则", v: "J" }, { t: "保持开放，随时准备应对变化", v: "P" }] },
+        { text: "你更喜欢的做事风格是：", options: [{ t: "按部就班，稳扎稳打", v: "J" }, { t: "灵活多变，随机应变", v: "P" }] },
+        { text: "你的衣柜通常是：", options: [{ t: "衣服分类整齐，一目了然", v: "J" }, { t: "衣服混在一起，找起来费劲", v: "P" }] },
+        { text: "在开始一项任务前，你通常会：", options: [{ t: "制定详细的计划和时间表", v: "J" }, { t: "直接开始，边做边调整", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "把工作提前完成，留出余地", v: "J" }, { t: "在压力下工作，效率更高", v: "P" }] },
+        { text: "对于规则，你的态度是：", options: [{ t: "遵守规则，维护秩序", v: "J" }, { t: "规则是死的，人是活的", v: "P" }] },
+        { text: "你更喜欢的居住环境是：", options: [{ t: "整洁、有序、一尘不染", v: "J" }, { t: "舒适、随意、有点生活气息", v: "P" }] },
+        { text: "在约会时，你通常：", options: [{ t: "提前到达，不喜欢迟到", v: "J" }, { t: "经常踩点到，甚至偶尔迟到", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "把大目标分解成小步骤逐个完成", v: "J" }, { t: "先做起来，大目标自然水到渠成", v: "P" }] },
+        { text: "在面对选择时，你更倾向于：", options: [{ t: "快速决定，避免纠结", v: "J" }, { t: "反复权衡，迟迟难以决定", v: "P" }] },
+        { text: "你更喜欢的假期状态是：", options: [{ t: "有明确的行程安排", v: "J" }, { t: "完全放松，想干嘛就干嘛", v: "P" }] },
+        { text: "你更倾向于认为：", options: [{ t: "凡事预则立，不预则废", v: "J" }, { t: "计划赶不上变化，顺其自然", v: "P" }] },
+        { text: "在工作中，你更喜欢的角色是：", options: [{ t: "项目管理者，把控进度", v: "J" }, { t: "创意提供者，灵活支持", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "保持桌面和房间的整洁", v: "J" }, { t: "东西随手放，需要时再找", v: "P" }] },
+        { text: "对于未完成的任务，你会：", options: [{ t: "感到焦虑，想尽快完成", v: "J" }, { t: "觉得没什么，慢慢来", v: "P" }] },
+        { text: "你更喜欢的决策方式是：", options: [{ t: "果断拍板，承担责任", v: "J" }, { t: "集思广益，民主决定", v: "P" }] },
+        { text: "在组织活动时，你通常会：", options: [{ t: "提前安排好所有细节", v: "J" }, { t: "定个大概，现场随机应变", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "把生活安排得井井有条", v: "J" }, { t: "享受生活中的不确定性和惊喜", v: "P" }] },
+        { text: "对于突如其来的变化，你通常：", options: [{ t: "需要时间适应，甚至有些抗拒", v: "J" }, { t: "很快就能适应，甚至感到兴奋", v: "P" }] },
+        { text: "你更喜欢的购物方式是：", options: [{ t: "目标明确，买完就走", v: "J" }, { t: "享受逛街的过程，慢慢挑选", v: "P" }] },
+        { text: "在写报告时，你通常会：", options: [{ t: "先列大纲，再逐步填充", v: "J" }, { t: "先写内容，最后再整理结构", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "今日事今日毕", v: "J" }, { t: "拖到最后一刻再做", v: "P" }] },
+        { text: "在团队中，你更倾向于：", options: [{ t: "明确分工，按计划推进", v: "J" }, { t: "灵活协作，随时补位", v: "P" }] },
+        { text: "你更喜欢的阅读方式是：", options: [{ t: "从头到尾，按顺序阅读", v: "J" }, { t: "跳读，先看感兴趣的章节", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "把时间安排得满满当当", v: "J" }, { t: "留出大量空白时间，随心所欲", v: "P" }] },
+        { text: "对于自己的物品，你通常：", options: [{ t: "分门别类，摆放整齐", v: "J" }, { t: "随手放置，用时再找", v: "P" }] },
+        { text: "你更喜欢的旅游方式是：", options: [{ t: "跟团游，省心省力", v: "J" }, { t: "自由行，随心所欲", v: "P" }] },
+        { text: "在遇到问题时，你更倾向于：", options: [{ t: "按既定流程解决", v: "J" }, { t: "尝试各种可能的方法", v: "P" }] },
+        { text: "你更倾向于认为：", options: [{ t: "秩序带来安全感", v: "J" }, { t: "自由带来创造力", v: "P" }] },
+        { text: "你更喜欢的电影结局是：", options: [{ t: "有明确的结局，交代清楚", v: "J" }, { t: "开放式结局，留有想象空间", v: "P" }] },
+        { text: "在制定目标时，你更倾向于：", options: [{ t: "设定明确的截止日期", v: "J" }, { t: "设定大致方向，不设限", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "先完成，再完美", v: "J" }, { t: "边做边改，追求极致", v: "P" }] },
+        { text: "在社交场合，你更倾向于：", options: [{ t: "提前想好话题，避免冷场", v: "J" }, { t: "随机应变，想到什么聊什么", v: "P" }] },
+        { text: "你更喜欢的穿衣风格是：", options: [{ t: "经典、百搭、不易出错", v: "J" }, { t: "个性、多变、紧跟潮流", v: "P" }] },
+        { text: "在处理多项任务时，你通常会：", options: [{ t: "一件一件按顺序完成", v: "J" }, { t: "同时进行，随时切换", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "保持生活的规律性", v: "J" }, { t: "享受生活的随机性", v: "P" }] },
+        { text: "在面临截止日期时，你通常：", options: [{ t: "提前很久就开始准备", v: "J" }, { t: "最后几天才开始发力", v: "P" }] },
+        { text: "你更喜欢的伴侣类型是：", options: [{ t: "靠谱、有计划、能给人安全感", v: "J" }, { t: "有趣、随性、能带来新鲜感", v: "P" }] },
+        { text: "你更倾向于：", options: [{ t: "把生活过成一条直线，稳步向前", v: "J" }, { t: "把生活过成一条曲线，充满变数", v: "P" }] },
+        { text: "在周末，你通常会：", options: [{ t: "提前安排好活动，充实度过", v: "J" }, { t: "睡到自然醒，随意安排", v: "P" }] },
+        { text: "你更倾向于认为：", options: [{ t: "自律即自由", v: "J" }, { t: "随心所欲才是自由", v: "P" }] }
+    ];
+
+    // ================= 状态管理 =================
+    let currentVersion = 'complete';
+    let totalQuestions = 200;
+    let currentQuestionIndex = 0;
+    let userAnswers = []; 
+    let currentQuizQuestions = [];
+
+    // ================= 页面切换逻辑 =================
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // ================= 首页交互 =================
+    function selectVersion(version, questions) {
+        currentVersion = version;
+        totalQuestions = questions;
+        
+        // 清除所有卡片的 active 状态
+        document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+        
+        // 给当前点击的卡片添加 active 状态
+        document.getElementById('card-' + version).classList.add('active');
+    }
+
+    // ================= 测试逻辑 (与原版一致) =================
+    function startQuiz() {
+        currentQuestionIndex = 0;
+        userAnswers = [];
+        
+        let shuffledBank = [...questionBank];
+        for (let i = shuffledBank.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledBank[i], shuffledBank[j]] = [shuffledBank[j], shuffledBank[i]];
+        }
+        
+        currentQuizQuestions = shuffledBank.slice(0, totalQuestions);
+        showScreen('quiz-screen');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const question = currentQuizQuestions[currentQuestionIndex];
+        
+        const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+        document.getElementById('progress-bar').style.width = progress + '%';
+        document.getElementById('question-meta').innerText = `第 ${currentQuestionIndex + 1} 题 / 共 ${totalQuestions} 题`;
+        document.getElementById('question-text').innerText = question.text;
+
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        let shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+
+        shuffledOptions.forEach((option) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = option.t;
+            btn.onclick = () => selectOption(option.v, btn);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function selectOption(value, btnElement) {
+        userAnswers[currentQuestionIndex] = value;
+        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+        btnElement.classList.add('selected');
+
+        setTimeout(() => {
+            nextQuestion();
+        }, 250);
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < totalQuestions) {
+            loadQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    // ================= 真实计分逻辑 (与原版一致) =================
+    function finishQuiz() {
+        let scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+        
+        userAnswers.forEach(dim => {
+            if (scores[dim] !== undefined) scores[dim]++;
+        });
+
+        let resultType = "";
+        resultType += (scores.E >= scores.I) ? "E" : "I";
+        resultType += (scores.S >= scores.N) ? "S" : "N";
+        resultType += (scores.T >= scores.F) ? "T" : "F";
+        resultType += (scores.J >= scores.P) ? "J" : "P";
+
+        const resultData = getMBTIDescription(resultType);
+        document.getElementById('result-type').innerText = resultType;
+        document.getElementById('result-title').innerText = resultData.title;
+        document.getElementById('result-desc').innerText = resultData.desc;
+
+        showScreen('result-screen');
+    }
+
+    function getMBTIDescription(type) {
+        const descriptions = {
+            "INTJ": { title: "建筑师", desc: "富有想象力和战略性的思想家，一切皆在计划之中。你具有极强的独立性和分析能力，喜欢通过逻辑和系统来解决问题。" },
+            "INTP": { title: "逻辑学家", desc: "具有创造力的发明家，对知识有着止不住的渴望。你喜欢抽象思考，善于发现事物背后的规律和逻辑漏洞。" },
+            "ENTJ": { title: "指挥官", desc: "大胆、富有想象力、意志强大的领导者，总能找到或创造解决方法。你善于组织资源，带领团队达成目标。" },
+            "ENTP": { title: "辩论家", desc: "聪明好奇的思想者，不会放弃任何智力上的挑战。你喜欢头脑风暴，善于从不同角度看待问题。" },
+            "INFJ": { title: "提倡者", desc: "安静而神秘，同时鼓舞人心且不知疲倦的理想主义者。你具有强烈的同理心和洞察力，致力于帮助他人实现潜能。" },
+            "INFP": { title: "调停者", desc: "诗意、善良的利他主义者，总是热情地为正当理由提供帮助。你内心充满理想，重视个人价值观和情感深度。" },
+            "ENFJ": { title: "主人公", desc: "富有魅力、鼓舞人心的领导者，有使听众着迷的能力。你天生具有感染力，善于察觉他人的情绪并给予引导。" },
+            "ENFP": { title: "竞选者", desc: "热情、有创造力、爱社交的自由人，总能找到理由微笑。你对生活充满好奇，善于发现新的可能性。" },
+            "ISTJ": { title: "物流师", desc: "实际且注重事实的个人，可靠性不容怀疑。你做事有条理、有责任感，喜欢按照既定的规则和程序行事。" },
+            "ISFJ": { title: "守卫者", desc: "非常专注而温暖的守护者，时刻准备着保护爱着的人们。你细心、体贴，对细节有惊人的记忆力。" },
+            "ESTJ": { title: "总经理", desc: "出色的管理者，在管理事情或人的方面无与伦比。你重视秩序、结构和效率，是传统和规则的坚定维护者。" },
+            "ESFJ": { title: "执政官", desc: "极有同情心、爱交往、受欢迎的人们，总是热心提供帮助。你重视和谐的人际关系，乐于为他人服务。" },
+            "ISTP": { title: "鉴赏家", desc: "大胆而实际的实验家，擅长使用任何形式的工具。你冷静、理性，喜欢通过动手实践来解决问题。" },
+            "ISFP": { title: "探险家", desc: "灵活有魅力的艺术家，时刻准备着探索和体验新鲜事物。你敏感、温和，活在当下，享受生活中的美好。" },
+            "ESTP": { title: "企业家", desc: "聪明、精力充沛、善于感知的人，真心享受生活在边缘。你行动力强，喜欢冒险，善于应对突发状况。" },
+            "ESFP": { title: "表演者", desc: "自发的、精力充沛而热情的表演者，生活在他们周围永不无聊。你热爱社交，善于活跃气氛，享受成为焦点的感觉。" }
+        };
+        return descriptions[type] || { title: "未知类型", desc: "暂无描述" };
+    }
+
+    function restart() {
+        currentQuestionIndex = 0;
+        userAnswers = [];
+        showScreen('start-screen');
+    }
+</script>
+</body>
+</html>
